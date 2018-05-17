@@ -6,10 +6,10 @@ def median_bucket(distribution):
     sum_head = distribution[head]
     sum_tail = distribution[tail]
     while (tail - head >= 2):
-        print('The current sum head  is {}'.format(sum_head))
-        print('The current sum tail is {}'.format(sum_tail))
+        # print('The current sum head  is {}'.format(sum_head))
+        # print('The current sum tail is {}'.format(sum_tail))
         current_min = min(sum_head, sum_tail)
-        print('The current min is {}'.format(current_min))
+        # print('The current min is {}'.format(current_min))
         if (current_min == sum_head):
             head = head + 1
             current_head_value = distribution[head]
