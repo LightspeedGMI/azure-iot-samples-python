@@ -4,8 +4,6 @@ import logging
 import time
 import json
 
-device_seq = "6"
-
 
 def updateDeviceState(device_seq, device_state):
     host = "a3mfkf3z93nqt8.iot.us-west-2.amazonaws.com"
@@ -26,7 +24,7 @@ def updateDeviceState(device_seq, device_state):
             payloadDict = json.loads(payload)
             print("~~~~~~~~~~~~~~~~~~~~~~~")
             print("Update request with token: " + token + " accepted!")
-            print("property: " + str(payloadDict["state"]["desired"]["property"]))
+            print("property: " + json.dumps(payloadDict["state"]["desired"]))
             print("~~~~~~~~~~~~~~~~~~~~~~~\n\n")
         if responseStatus == "rejected":
             print("Update request " + token + " rejected!")
@@ -43,7 +41,7 @@ def updateDeviceState(device_seq, device_state):
 
     # logging
     logger = logging.getLogger("AWSIoTPythonSDK.core")
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     streamHandler = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     streamHandler.setFormatter(formatter)
@@ -69,10 +67,14 @@ def updateDeviceState(device_seq, device_state):
 
     deviceShadowHandler.shadowUpdate(json.dumps({"state": {"desired": device_state}}), customShadowCallback_Update, 5)
 
+    time.sleep(5)
+
+    myAWSIoTMQTTShadowClient.disconnect()
+
 
 updateDeviceState(1, {"range": [0, 1000000]})
 updateDeviceState(2, {"range": [0, 1000000]})
-updateDeviceState(3, {"range": [0, 1000000]})
-updateDeviceState(4, {"range": [0, 1000000]})
-updateDeviceState(5, {"range": [0, 1000000]})
-updateDeviceState(6, {"range": [0, 1000000]})
+# updateDeviceState(3, {"range": [0, 1000000]})
+# updateDeviceState(4, {"range": [0, 1000000]})
+# updateDeviceState(5, {"range": [0, 1000000]})
+# updateDeviceState(6, {"range": [0, 1000000]})
