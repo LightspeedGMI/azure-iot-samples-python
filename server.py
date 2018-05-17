@@ -95,7 +95,7 @@ else:
 
         approx_median = (low_median + high_median) / 2
 
-        counts = {str(device_id): None for device_id in device_ids}
+        counts = {str(device_id+1): None for device_id in device_ids}
 
         while any([count is None for count in counts.values()]):
             messages = sqs_client.receive_message(QueueUrl='https://sqs.us-west-2.amazonaws.com/617297736688/hack1', MaxNumberOfMessages=10)
@@ -103,7 +103,9 @@ else:
                 for message in messages['Messages']:  # 'Messages' is a list
                     # next, we delete the message from the queue so no one else will process it again
                     device_body = json.loads(message['Body'])
+                    print(device_body)
                     counts[device_body['device']] = device_body['message']['counts']
+                    print(list([count is None for count in counts.values()]))
                     sqs_client.delete_message(QueueUrl='https://sqs.us-west-2.amazonaws.com/617297736688/hack1', ReceiptHandle=message['ReceiptHandle'])
             time.sleep(5)
 
