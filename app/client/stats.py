@@ -37,7 +37,7 @@ def less_than(readfile, target):
 
 def get_dist(lines, min_range, max_range, buckets):
     # calculate the bucket "step"
-    step = int(math.floor((max_range - min_range) / buckets))
+    step = int(math.floor((max_range - min_range + 1) / buckets))
 
     # initialize the counts
     counts = []
@@ -46,10 +46,14 @@ def get_dist(lines, min_range, max_range, buckets):
 
     for line in lines:
         try:
+
             number=int(line.strip())
-            bucket_number = number / step
-            counts[bucket_number] = counts[bucket_number] + 1
-        except Exception:
+            if (number >= min_range and number <= max_range):
+                bucket_number = (number - min_range) / step
+                counts[bucket_number] = counts[bucket_number] + 1
+        except Exception as ex:
+            print ex
+            print line
             pass
     return counts
 
