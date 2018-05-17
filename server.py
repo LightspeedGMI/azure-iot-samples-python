@@ -3,16 +3,17 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTShadowClient
 import logging
 import time
 import json
-
+import sys
+import boto3
 
 def updateDeviceState(device_seq, device_state):
     host = "a3mfkf3z93nqt8.iot.us-west-2.amazonaws.com"
     rootCAPath = "certs/root-CA.crt"
-    certificatePath = "certs/team55device%s.cert.pem" % device_seq
-    privateKeyPath = "certs/team55device%s.private.key" % device_seq
+    certificatePath = "certs/team55device%s.cert.pem" % (device_seq+1)
+    privateKeyPath = "certs/team55device%s.private.key" % (device_seq+1)
     clientId = "team55"
 
-    thingName = "team55device%s" % device_seq
+    thingName = "team55device%s" % (device_seq+1)
 
     # Custom Shadow callback
     def customShadowCallback_Update(payload, responseStatus, token):
@@ -72,9 +73,63 @@ def updateDeviceState(device_seq, device_state):
     myAWSIoTMQTTShadowClient.disconnect()
 
 
-updateDeviceState(1, {"range": [1, 3]})
-updateDeviceState(2, {"range": [2, 4]})
-# updateDeviceState(3, {"range": [0, 1000000]})
-# updateDeviceState(4, {"range": [0, 1000000]})
-# updateDeviceState(5, {"range": [0, 1000000]})
-# updateDeviceState(6, {"range": [0, 1000000]})
+def device_state(low, high):
+    return {"median": (low + high) / 2, "low_median": low, "high_median": high}
+
+
+N = 1000000
+num_devices = 2
+low_median = 0
+high_median = N
+device_ids = range(0, num_devices)
+
+if len(sys.argv) > 1 and 'init' == sys.argv[1]:
+    if len(sys.argv) > 2:
+        updateDeviceState(int(sys.argv[2]), device_state(low_median, high_median))
+    else:
+        for device_id in device_ids:
+            updateDeviceState(device_id, device_state(low_median, high_median))
+else:
+    sqs_client = boto3.client('sqs')
+    while True:
+
+        approx_median = (low_median + high_median) / 2
+
+        counts = {str(device_id): None for device_id in device_ids}
+
+        while any([count is None for count in counts.values()]):
+            messages = sqs_client.receive_message(QueueUrl='https://sqs.us-west-2.amazonaws.com/617297736688/hack1', MaxNumberOfMessages=10)
+            if 'Messages' in messages:  # when the queue is exhausted, the response dict contains no 'Messages' key
+                for message in messages['Messages']:  # 'Messages' is a list
+                    # next, we delete the message from the queue so no one else will process it again
+                    device_body = json.loads(message['Body'])
+                    counts[device_body['device']] = device_body['message']['counts']
+                    sqs_client.delete_message(QueueUrl='https://sqs.us-west-2.amazonaws.com/617297736688/hack1', ReceiptHandle=message['ReceiptHandle'])
+            time.sleep(5)
+
+        lcount, ecount, hcount = 0, 0, 0
+        for device_id, count in counts.iteritems():
+            low, eq, high = count
+            lcount += low
+            hcount += high
+            ecount += eq
+
+        print(low_median, lcount, approx_median, ecount, hcount, high_median)
+
+        if lcount < hcount:
+            low_median = approx_median
+        elif hcount < lcount:
+            high_median = approx_median
+
+        print("Median: " + str(approx_median))
+
+        if approx_median == (low_median + high_median) / 2:
+            if (ecount == 0) and ((lcount + hcount) % 2 == 0):
+                print("Median %f: " % (low_median + high_median) / 2.0)
+            else:
+                print("Median %d: " % approx_median)
+            break
+
+        for device_id in device_ids:
+            updateDeviceState(device_id, updateDeviceState(device_id, device_state(low_median, high_median)))
+

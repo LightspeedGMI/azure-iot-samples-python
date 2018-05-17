@@ -49,11 +49,12 @@ myAWSIoTMQTTShadowClient.configureMQTTOperationTimeout(5)  # 5 sec
 myAWSIoTMQTTShadowClient.connect()
 
 N = 1000000
-deviceState = {"approx_median": N / 2}
+deviceState = {}
 
 
 def median_counts(device_seq, median):
-    with open('vibrations-m%d.txt' % device_seq, 'r') as f:
+    print("median_counts", device_seq, median)
+    with open('vibrations-m%d.txt' % (int(device_seq) - 1), 'r') as f:
         low, high, eq = 0, 0, 0
         for line in f.readlines():
             if not line.startswith('vibration'):
@@ -68,8 +69,8 @@ def median_counts(device_seq, median):
 
 
 def do_median(median):
-    low, eq, high = median_counts(median)
-    message = {"msg": "counts", "median": median, "counts": [low, eq, high]}
+    low, eq, high = median_counts(device_id, median)
+    message = {"msg": "counts", "median": median, "counts": [low, eq, high], "state": deviceState}
     messageJson = json.dumps({'message': message, 'device': device_id})
     print(topic, messageJson)
     myAWSIoTMQTTClient.publish(topic, messageJson, 1)
@@ -85,9 +86,10 @@ def customShadowCallback_Delta(payload, responseStatus, token):
         print("state: " + str(payloadDict["state"]))
         print("version: " + str(payloadDict["version"]))
         print("+++++++++++++++++++++++\n\n")
-        deviceState.update(payloadDict["state"])
-        if "median" in payloadDict["state"]:
-            do_median(int(payloadDict["state"]["median"]))
+        deviceState.update(payloadDict["state"]["delta"])
+        print(deviceState)
+        if "median" in deviceState:
+            do_median(int(deviceState["median"]))
     except Exception as e:
         print(str(e))
 
@@ -103,9 +105,9 @@ def customShadowCallback_Get(payload, responseStatus, token):
         print("state: " + str(payloadDict["state"]))
         print("version: " + str(payloadDict["version"]))
         print("+++++++++++++++++++++++\n\n")
-        deviceState.update(payloadDict["state"])
-        if "median" in payloadDict["state"]:
-            do_median(int(payloadDict["state"]["median"]))
+        deviceState.update(payloadDict["state"]["delta"])
+        if "median" in deviceState:
+            do_median(int(deviceState["median"]))
     except Exception as e:
         print(str(e))
 
@@ -117,8 +119,6 @@ deviceShadowHandler = myAWSIoTMQTTShadowClient.createShadowHandlerWithName(thing
 # deviceShadowHandler.shadowRegisterDeltaCallback(customShadowCallback_Delta)
 
 deviceShadowHandler.shadowGet(customShadowCallback_Get, 5)
-
-time.sleep(10)
 
 myAWSIoTMQTTClient.connect()
 
