@@ -19,3 +19,13 @@ class test_util(unittest.TestCase):
     @data_provider(data_provider_median_bucket)
     def test_median_bucket(self, expected, distribution):
         self.assertEqual(expected, util.median_bucket(distribution))
+
+    data_provider_median_bucket_with_left_right = lambda: (
+        ([2], [101, 121, 131, 20, 24, 29, 123, 99], 0, 0),
+        ([2, 3], [101, 121, 131, 20, 24, 29, 123, 99], 100, 158),
+        ([2], [101, 121, 131, 20, 24, 29, 123, 99], 100, 157),
+        ([3], [101, 121, 131, 20, 24, 29, 123, 99], 100, 159),
+    )
+    @data_provider(data_provider_median_bucket_with_left_right)
+    def test_median_bucket_with_left_right(self, expected, distribution, left, right):
+        self.assertEqual(expected, util.median_bucket(distribution, left, right))
