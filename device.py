@@ -6,15 +6,15 @@ import time
 import json
 import sys
 
-device_seq = sys.argv[1]
+device_id = sys.argv[1]
 
 host = "a3mfkf3z93nqt8.iot.us-west-2.amazonaws.com"
 rootCAPath = "certs/root-CA.crt"
-certificatePath = "certs/team55device%s.cert.pem" % device_seq
-privateKeyPath = "certs/team55device%s.private.key" % device_seq
+certificatePath = "certs/team55device%s.cert.pem" % device_id
+privateKeyPath = "certs/team55device%s.private.key" % device_id
 clientId = "team55"
 
-thingName = "team55device%s" % device_seq
+thingName = "team55device%s" % device_id
 
 # logging
 logger = logging.getLogger("AWSIoTPythonSDK.core")
@@ -48,19 +48,48 @@ myAWSIoTMQTTShadowClient.configureMQTTOperationTimeout(5)  # 5 sec
 
 myAWSIoTMQTTShadowClient.connect()
 
-deviceState = {}
+N = 1000000
+deviceState = {"approx_median": N / 2}
+
+
+def median_counts(device_seq, median):
+    with open('vibrations-m%d.txt' % device_seq, 'r') as f:
+        low, high, eq = 0, 0, 0
+        for line in f.readlines():
+            if not line.startswith('vibration'):
+                n = int(line)
+                if n < median:
+                    low += 1
+                if n > median:
+                    high += 1
+                if n == median:
+                    eq += 1
+    return low, eq, high
+
+
+def do_median(median):
+    low, eq, high = median_counts(median)
+    message = {"msg": "counts", "median": median, "counts": [low, eq, high]}
+    messageJson = json.dumps({'message': message, 'device': device_id})
+    print(topic, messageJson)
+    myAWSIoTMQTTClient.publish(topic, messageJson, 1)
 
 
 def customShadowCallback_Delta(payload, responseStatus, token):
     # payload is a JSON string ready to be parsed using json.loads(...)
     # in both Py2.x and Py3.x
     print(responseStatus)
-    payloadDict = json.loads(payload)
-    print("++++++++DELTA++++++++++")
-    print("state: " + str(payloadDict["state"]))
-    print("version: " + str(payloadDict["version"]))
-    print("+++++++++++++++++++++++\n\n")
-    deviceState.update(payloadDict["state"])
+    try:
+        payloadDict = json.loads(payload)
+        print("++++++++DELTA++++++++++")
+        print("state: " + str(payloadDict["state"]))
+        print("version: " + str(payloadDict["version"]))
+        print("+++++++++++++++++++++++\n\n")
+        deviceState.update(payloadDict["state"])
+        if "median" in payloadDict["state"]:
+            do_median(int(payloadDict["state"]["median"]))
+    except Exception as e:
+        print(str(e))
 
 
 def customShadowCallback_Get(payload, responseStatus, token):
@@ -75,6 +104,8 @@ def customShadowCallback_Get(payload, responseStatus, token):
         print("version: " + str(payloadDict["version"]))
         print("+++++++++++++++++++++++\n\n")
         deviceState.update(payloadDict["state"])
+        if "median" in payloadDict["state"]:
+            do_median(int(payloadDict["state"]["median"]))
     except Exception as e:
         print(str(e))
 
@@ -96,9 +127,4 @@ loopCount = 0
 
 # Loop forever to react to device state delta requests
 while True:
-    message = {"msg": "INIT", "seq": loopCount}
-    loopCount += 1
-    messageJson = json.dumps({'message': message, 'device': device_seq})
-    print(messageJson)
-    myAWSIoTMQTTClient.publish(topic, messageJson, 1)
     time.sleep(5)

@@ -72,8 +72,8 @@ def updateDeviceState(device_seq, device_state):
     myAWSIoTMQTTShadowClient.disconnect()
 
 
-updateDeviceState(1, {"range": [0, 1000000]})
-updateDeviceState(2, {"range": [0, 1000000]})
+updateDeviceState(1, {"range": [1, 3]})
+updateDeviceState(2, {"range": [2, 4]})
 # updateDeviceState(3, {"range": [0, 1000000]})
 # updateDeviceState(4, {"range": [0, 1000000]})
 # updateDeviceState(5, {"range": [0, 1000000]})
