@@ -16,7 +16,15 @@ from iothub_client import IoTHubMessage, IoTHubMessageDispositionResult, IoTHubE
 # The device connection string to authenticate the device with your IoT hub.
 # Using the Azure CLI:
 # az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyNodeDevice --output table
-CONNECTION_STRING = "{Your IoT hub device connection string}"
+devices = {
+    "team55device1": "HostName=team55hub.azure-devices.net;DeviceId=team55device1;SharedAccessKey=UJxknjMfsO+GYkLQ4gU+1qeJ/O3EINIOgvtVKs6gRlU=",
+    "team55device2": "HostName=team55hub.azure-devices.net;DeviceId=team55device2;SharedAccessKey=lzNEy4TEhnMY6urGnAfGMyN4LqjKn0LQ4Vcm+8g4Wa0=",
+    "team55device3": "HostName=team55hub.azure-devices.net;DeviceId=team55device3;SharedAccessKey=doLCQrlRsPaHfXGV+ngk4SPWuUDwlDBOt4sZoVqKhHM=",
+    "team55device4": "HostName=team55hub.azure-devices.net;DeviceId=team55device4;SharedAccessKey=fd0TY6rjiQ9DTLcDg2fq3kXhmVqQsEHnfheJqqr0byc=",
+    "team55device5": "HostName=team55hub.azure-devices.net;DeviceId=team55device5;SharedAccessKey=0Qqo+o74ZzAqrCTnJnpwRiDHhMy9HoezL7DZCe2X13M=",
+    "team55device6": "HostName=team55hub.azure-devices.net;DeviceId=team55device6;SharedAccessKey=WzhumleDUcD/S+mDyzmi7gP5Folrwgml/EQEP9pPW2I="
+}
+CONNECTION_STRING = devices['team55device1']
 
 # Using the MQTT protocol.
 PROTOCOL = IoTHubTransportProvider.MQTT
@@ -27,7 +35,7 @@ TEMPERATURE = 20.0
 HUMIDITY = 60
 MSG_TXT = "{\"temperature\": %.2f,\"humidity\": %.2f}"
 
-INTERVAL = 1
+INTERVAL = 15
 
 def send_confirmation_callback(message, result, user_context):
     print ( "IoT Hub responded to message with status: %s" % (result) )

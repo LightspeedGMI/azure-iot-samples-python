@@ -16,7 +16,7 @@ from iothub_client import IoTHubMessage, IoTHubMessageDispositionResult, IoTHubE
 # The device connection string to authenticate the device with your IoT hub.
 # Using the Azure CLI:
 # az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyNodeDevice --output table
-CONNECTION_STRING = "{Your IoT hub device connection string}"
+CONNECTION_STRING = "HostName=pztest.azure-devices.net;DeviceId=MyPythonDevice;SharedAccessKey=E3xjZQuVJEhqfw0XFPHx66kvH7MVZWBZy21UJVTpwYY="
 
 # Using the MQTT protocol.
 PROTOCOL = IoTHubTransportProvider.MQTT
@@ -59,7 +59,7 @@ def iothub_client_telemetry_sample_run():
             # Send the message.
             print( "Sending message: %s" % message.get_string() )
             client.send_event_async(message, send_confirmation_callback, None)
-            time.sleep(1)
+            time.sleep(15)
 
     except IoTHubError as iothub_error:
         print ( "Unexpected error %s from IoTHub" % iothub_error )
