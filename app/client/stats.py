@@ -46,7 +46,6 @@ def get_dist(lines, min_range, max_range, buckets):
 
     for line in lines:
         try:
-
             number=int(line.strip())
             if (number >= min_range and number <= max_range):
                 bucket_number = (number - min_range) / step
@@ -71,7 +70,7 @@ def get_dist_file(file_name, min_range, max_range, buckets):
 #max_range = int(args[3])
 #buckets = int(args[4])
 
-#dist_list = get_dist(min_range, max_range, buckets)
+#dist_list = get_dist_file(readfile, min_range, max_range, buckets)
 
 #print(dist_list)
 #print(sum(dist_list))
