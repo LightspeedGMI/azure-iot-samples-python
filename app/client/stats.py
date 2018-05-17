@@ -41,7 +41,7 @@ def get_dist(lines, min_range, max_range, buckets):
 
     # initialize the counts
     counts = []
-    for i in range(buckets):
+    for i in range(buckets + 1):
         counts.append(0)
 
     for line in lines:
@@ -55,6 +55,8 @@ def get_dist(lines, min_range, max_range, buckets):
             print ex
             print line
             pass
+    counts[buckets - 1] = counts[buckets - 1] + counts[buckets]
+    del counts[buckets]
     return counts
 
 
